@@ -1,7 +1,7 @@
-# Nix Flake Development Environment Template
+# Geant4 Nix Flake
 Usage in a new project directory:
 ```
-nix flake init -t github:ewtodd/dev-env --refresh
+nix flake init -t github:ewtodd/geant4-env --refresh
 ```
 <!---->
-I'm tired of copying and pasting! Make an alias for this if you use it a lot.
+<!---->

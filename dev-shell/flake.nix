@@ -1,33 +1,68 @@
 {
-  description = "Nix Development Shell Flake Template";
+  description = "Geant4 environment with ROOT.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
-    flake-utils.url = "github:numtide/flake-utils";
+    utils.url = "github:ewtodd/Analysis-Utilities";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = nixpkgs.legacyPackages.${system};
+  outputs = { self, nixpkgs, utils }:
+    let
+      system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
+      geant4custom = pkgs.geant4.override { enableQt = true; };
+      analysis-utils = utils.packages.${system}.default;
+    in {
+      devShells.${system}.default = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          root
+          geant4custom
+          cmake
+          analysis-utils
+          geant4.data.G4ABLA
+          geant4.data.G4INCL
+          geant4.data.G4PhotonEvaporation
+          geant4.data.G4RealSurface
+          geant4.data.G4EMLOW
+          geant4.data.G4NDL
+          geant4.data.G4PII
+          geant4.data.G4SAIDDATA
+          geant4.data.G4ENSDFSTATE
+          geant4.data.G4PARTICLEXS
+          geant4.data.G4TENDL
+          geant4.data.G4RadioactiveDecay
+        ];
+        shellHook = ''
+          export QT_QPA_PLATFORM=wayland
+          export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+          export G4VIS_DEFAULT_DRIVER=TSG_QT_ZB
 
-      in {
-        devShells.default = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [ pkg-config ];
-          buildInputs = with pkgs; [
-            root
-            gnumake
-            (python3.withPackages
-              (python-pkgs: with python-pkgs; [ matplotlib numpy pandas ]))
-          ];
-          shellHook = ''
-            STDLIB_PATH="${pkgs.stdenv.cc.cc}/include/c++/${pkgs.stdenv.cc.cc.version}"
-            STDLIB_MACHINE_PATH="$STDLIB_PATH/x86_64-unknown-linux-gnu"
-            export CPLUS_INCLUDE_PATH="$STDLIB_PATH:$STDLIB_MACHINE_PATH:$PWD/include:$(root-config --incdir):$CPLUS_INCLUDE_PATH"
-            export ROOT_INCLUDE_PATH="$PWD/include:$(root-config --incdir)"
-            export LD_LIBRARY_PATH="$PWD/lib:$LD_LIBRARY_PATH"
+          export AMD_VULKAN_ICD=RADV
+          export RADV_PERFTEST=gpl  
+          export MESA_LOADER_DRIVER_OVERRIDE=radeonsi
 
-            echo "C++ stdlib: $STDLIB_PATH"
-          '';
-        };
-      });
+          export mesa_glthread=false
+          export __GL_THREADED_OPTIMIZATIONS=0
+
+          export DISPLAY=:0
+          echo "ROOT version: $(root-config --version)"
+          echo "Nuclear-Measurement-Utilities: ${analysis-utils}"
+
+          STDLIB_PATH="${pkgs.stdenv.cc.cc}/include/c++/${pkgs.stdenv.cc.cc.version}"
+          STDLIB_MACHINE_PATH="$STDLIB_PATH/x86_64-unknown-linux-gnu"
+
+          ROOT_INC="$(root-config --incdir)"
+          # Local first, then remote, then others
+          export CPLUS_INCLUDE_PATH="$PWD/include:$STDLIB_PATH:$STDLIB_MACHINE_PATH:${analysis-utils}/include:$ROOT_INC''${CPLUS_INCLUDE_PATH:+:$CPLUS_INCLUDE_PATH}"
+
+          export PKG_CONFIG_PATH="${analysis-utils}/lib/pkgconfig:$PKG_CONFIG_PATH"
+
+          export ROOT_INCLUDE_PATH="$PWD/include:${analysis-utils}/include''${ROOT_INCLUDE_PATH:+:$ROOT_INCLUDE_PATH}"
+          # Local lib first means linker will use it preferentially
+          export LD_LIBRARY_PATH="$PWD/lib:${analysis-utils}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+        '';
+      };
+    };
 }
+

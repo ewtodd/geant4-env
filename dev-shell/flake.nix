@@ -6,13 +6,19 @@
     utils.url = "github:ewtodd/Analysis-Utilities";
   };
 
-  outputs = { self, nixpkgs, utils }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      utils,
+    }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
       geant4custom = pkgs.geant4.override { enableQt = true; };
       analysis-utils = utils.packages.${system}.default;
-    in {
+    in
+    {
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [
           root
@@ -33,6 +39,7 @@
           geant4.data.G4RadioactiveDecay
         ];
         shellHook = ''
+          export SHELL="/run/current-system/sw/bin/bash"
           export QT_QPA_PLATFORM=wayland
           export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
           export G4VIS_DEFAULT_DRIVER=TSG_QT_ZB
@@ -65,4 +72,3 @@
       };
     };
 }
-

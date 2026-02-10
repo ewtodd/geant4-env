@@ -40,6 +40,10 @@
             geant4.data.G4PARTICLEXS
             geant4.data.G4TENDL
             geant4.data.G4RadioactiveDecay
+            (python3.withPackages (python3Packages: [
+              python3Packages.numpy
+              python3Packages.root
+            ]))
           ];
           shellHook = ''
             export SHELL="${pkgs.zsh}/bin/zsh"

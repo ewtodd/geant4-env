@@ -27,7 +27,7 @@
             geant4custom
             cmake
             analysis-utils
-            zsh
+            bash
             geant4.data.G4ABLA
             geant4.data.G4INCL
             geant4.data.G4PhotonEvaporation
@@ -46,7 +46,7 @@
             ]))
           ];
           shellHook = ''
-            export SHELL="${pkgs.zsh}/bin/zsh"
+            export SHELL="${pkgs.bash}/bin/bash"
             ${
               if !isDarwin then
                 ''
@@ -76,7 +76,6 @@
             export ROOT_INCLUDE_PATH="$PWD/include:${analysis-utils}/include''${ROOT_INCLUDE_PATH:+:$ROOT_INCLUDE_PATH}"
             # Local lib first means linker will use it preferentially
             export LD_LIBRARY_PATH="$PWD/lib:${analysis-utils}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-            exec ${pkgs.zsh}/bin/zsh
           '';
         };
       }

@@ -65,17 +65,25 @@
             }
             echo "ROOT version: $(root-config --version)"
             echo "Analysis-Utilities: ${analysis-utils}"
+
+            # Get Geant4 paths
+            G4_INC="$(geant4-config --prefix)/include/Geant4"
+            G4_LIB="$(geant4-config --prefix)/lib"
+            echo "Geant4 include: $G4_INC"
+
             STDLIB_PATH="${pkgs.stdenv.cc.cc}/include/c++/${pkgs.stdenv.cc.cc.version}"
             STDLIB_MACHINE_PATH="$STDLIB_PATH/${
               if isDarwin then "arm64-apple-darwin" else "x86_64-unknown-linux-gnu"
             }"
             ROOT_INC="$(root-config --incdir)"
-            # Local first, then remote, then others
-            export CPLUS_INCLUDE_PATH="$PWD/include:$STDLIB_PATH:$STDLIB_MACHINE_PATH:${analysis-utils}/include:$ROOT_INC''${CPLUS_INCLUDE_PATH:+:$CPLUS_INCLUDE_PATH}"
+
+            # Local first, then remote, then others (now including Geant4)
+            export CPLUS_INCLUDE_PATH="$PWD/include:$STDLIB_PATH:$STDLIB_MACHINE_PATH:${analysis-utils}/include:$ROOT_INC:$G4_INC''${CPLUS_INCLUDE_PATH:+:$CPLUS_INCLUDE_PATH}"
             export PKG_CONFIG_PATH="${analysis-utils}/lib/pkgconfig:$PKG_CONFIG_PATH"
-            export ROOT_INCLUDE_PATH="$PWD/include:${analysis-utils}/include''${ROOT_INCLUDE_PATH:+:$ROOT_INCLUDE_PATH}"
-            # Local lib first means linker will use it preferentially
-            export LD_LIBRARY_PATH="$PWD/lib:${analysis-utils}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+            export ROOT_INCLUDE_PATH="$PWD/include:${analysis-utils}/include:$G4_INC''${ROOT_INCLUDE_PATH:+:$ROOT_INCLUDE_PATH}"
+
+            # Local lib first means linker will use it preferentially (now including Geant4)
+            export LD_LIBRARY_PATH="$PWD/lib:${analysis-utils}/lib:$G4_LIB''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           '';
         };
       }
